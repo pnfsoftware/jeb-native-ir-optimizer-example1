@@ -84,7 +84,7 @@ public class Tester {
         INativeDecompilerUnit<?> decomp = (INativeDecompilerUnit<?>)DecompilerHelper.getDecompiler(cu);
         logger.info("Decompiler: %s", decomp);
 
-        INativeSourceUnit src = decomp.decompile(routineName);
-        logger.info("SOURCE =>\n%s", src.getRootElement());
+        INativeSourceUnit src = decomp.decompileToUnit(routineName);
+        logger.info("SOURCE =>\n%s", src.getASTItem());
     }
 }
