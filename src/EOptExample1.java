@@ -1,6 +1,6 @@
 import com.pnfsoftware.jeb.core.Version;
 import com.pnfsoftware.jeb.core.units.code.asm.cfg.BasicBlock;
-import com.pnfsoftware.jeb.core.units.code.asm.decompiler.DecompilerUtil;
+import com.pnfsoftware.jeb.core.units.code.asm.decompiler.ir.EUtil;
 import com.pnfsoftware.jeb.core.units.code.asm.decompiler.ir.IEAssign;
 import com.pnfsoftware.jeb.core.units.code.asm.decompiler.ir.IEImm;
 import com.pnfsoftware.jeb.core.units.code.asm.decompiler.ir.IEMem;
@@ -24,24 +24,20 @@ public class EOptExample1 extends AbstractEOptimizer {
         getPluginInformation().setVersion(Version.create(1, 0, 0));
 
         // Standard optimizers are normally run, as part of the IR optimization stages in the decompilation pipeline
-        setType(OptimizerType.STANDARD);
-
-//        // alternative (better for production / in UI use):
-//        setType(OptimizerType.ON_DEMAND);
-//        // note the minus sign, the optimizer will be run before 
-//        setPreferredExecutionStage(-NativeDecompilationStage.LIFTING_COMPLETED.getId());
-//        setPostProcessingActionFlags(PPA_OPTIMIZATION_PASS_FULL);
+        setType(OptimizerType.NORMAL);
+        //        // note the minus sign, the optimizer will be run before 
+        //        setPreferredExecutionStage(-NativeDecompilationStage.LIFTING_COMPLETED.getId());
+        //        setPostProcessingActionFlags(PPA_OPTIMIZATION_PASS_FULL);
     }
 
     // replace all IR statements previously reduced to "[..] = xxx" to ENop
     @Override
-    public int perform(boolean updateDFA) {
-        logger.info("IR-CFG before running custom optimizer \"%s\":\n%s", getName(),
-                DecompilerUtil.formatIRCFGWithContext(2, cfg, ectx));
+    public int perform() {
+        logger.info("IR-CFG before running custom optimizer \"%s\":\n%s", getName(), EUtil.formatIR(ectx));
 
         final long garbageStart = 0x415882;
         final long garbageEnd = garbageStart + 0x100;
-        
+
         int cnt = 0;
         for(int iblk = 0; iblk < cfg.size(); iblk++) {
             BasicBlock<IEStatement> b = cfg.get(iblk);
@@ -59,7 +55,8 @@ public class EOptExample1 extends AbstractEOptimizer {
                 IEMem target = (IEMem)asg.getLeftOperand();
                 if(!(target.getReference() instanceof IEImm)) {
                     continue;
-                };
+                }
+                ;
 
                 IEImm wraddr = (IEImm)target.getReference();
                 if(!wraddr.canReadAsAddress()) {
@@ -75,6 +72,6 @@ public class EOptExample1 extends AbstractEOptimizer {
                 cnt++;
             }
         }
-        return postPerform(updateDFA, cnt);
+        return postPerform(cnt);
     }
 }
